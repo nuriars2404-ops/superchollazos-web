@@ -21,11 +21,16 @@ Lee la vista pública del canal (t.me/s/superchollazosysorteos), saca precio, de
 
 ## Publicarla gratis y que se actualice sola
 
-1. Crea un repositorio en GitHub y sube esta carpeta.
-2. En el repositorio: Settings → Pages → Source: "Deploy from a branch" → rama `main`, carpeta `/ (root)`.
-3. La acción `.github/workflows/actualizar-chollos.yml` vuelve a leer el canal cada 30 minutos y publica los chollos nuevos sola.
+1. Crea un repositorio público vacío en https://github.com/new llamado `superchollazos-web`.
+2. Súbelo:
+   ```bash
+   git remote add origin https://github.com/nuriars2404-ops/superchollazos-web.git
+   git push -u origin main
+   ```
+3. En el repositorio: Settings → Pages → Source: **GitHub Actions**.
+4. Settings → Actions → General → Workflow permissions: **Read and write permissions**.
 
-También vale Netlify, Vercel o Cloudflare Pages: es una web estática sin compilar.
+A partir de ahí, la acción `.github/workflows/actualizar-chollos.yml` lee el canal cada 10 minutos y publica la web en https://nuriars2404-ops.github.io/superchollazos-web/. Quien tenga la web abierta ve los chollos nuevos sin recargar (se comprueba cada 2 minutos).
 
 ## Ajustes
 
