@@ -73,6 +73,13 @@ def clean(fragment):
     return html.unescape(re.sub(r"<[^>]+>", "", fragment)).replace("\xa0", " ")
 
 
+def arregla_foto(url):
+    """A veces el bot publica fotos de Amazon con la dirección rota (/images/I/ID/AC_...).
+    Con el ID se pide la versión buena de 500 px."""
+    m = re.match(r"https?://m\.media-amazon\.com/images/I/([A-Za-z0-9+%-]+)/", url)
+    return f"https://m.media-amazon.com/images/I/{m.group(1)}._AC_SL500_.jpg" if m else url
+
+
 def categorize(title):
     t = title.lower()
     for name, pattern in CATEGORIES.items():
@@ -97,7 +104,8 @@ def parse_message(block):
 
     old = re.search(r"❌\s*([^:\n]+?):+\s*([\d.,]+)\s*€", text)
     disc = re.search(r"DESCUENTO:\s*(\d+)\s*%", text)
-    img = re.search(r'<a href="(https://img\.[^"]+\.(?:jpe?g|png|webp))"', raw) or \
+    # La foto es el enlace que envuelve el 🔥, o la foto adjunta al mensaje.
+    img = re.search(r'<a href="(https?://[^"]+)"[^>]*>\s*<i class="emoji"[^>]*><b>🔥', raw) or \
         re.search(r"tgme_widget_message_photo_wrap[^>]*background-image:url\('([^']+)'", block)
 
     # El título va entre el enlace de la foto (🔥) y la línea ENLACE.
@@ -122,7 +130,7 @@ def parse_message(block):
         "oldPrice": o,
         "oldLabel": label,
         "discount": d,
-        "image": img.group(1) if img else None,
+        "image": arregla_foto(img.group(1)) if img else None,
         "link": link.group(1),
         "category": categorize(title),
     }
