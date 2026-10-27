@@ -43,6 +43,14 @@
       </a>`).join("");
   }
 
+  // En España solo se puede tachar el precio más bajo de los últimos 30 días.
+  // Si el canal compara con otra referencia (PVP recomendado, precio mediano), se muestra sin tachar y diciendo cuál es.
+  function oldPrice(d) {
+    if (!d.oldPrice) return "";
+    if (/30 d/i.test(d.oldLabel || "")) return `<s title="Precio más bajo de los últimos 30 días">${euro(d.oldPrice)}</s>`;
+    return `<span class="ref">${esc(d.oldLabel || "Antes")}: ${euro(d.oldPrice)}</span>`;
+  }
+
   const index = (list) => list.map((d) => ({ ...d, _t: norm(`${d.title} ${d.category}`) }));
   let deals = index(DATA.deals);
   const priceOf = (d) => d.price ?? Infinity;
@@ -70,7 +78,7 @@
           <h3 class="card__title" title="${esc(d.title)}">${esc(d.title)}</h3>
           <p class="price">
             <strong>${euro(d.price)}</strong>
-            ${d.oldPrice ? `<s>${euro(d.oldPrice)}</s>` : ""}
+            ${oldPrice(d)}
             ${d.discount ? `<span class="pill pill--red">−${d.discount}%</span>` : ""}
           </p>
           <div class="card__actions">
@@ -122,10 +130,10 @@
     $("[data-featured]").innerHTML = `
       <p class="featured__tag"><b>#1</b> Chollo del día</p>
       <button class="featured__media" type="button" data-compare="${top.id}" aria-label="Comparar precio">
-        <img src="${esc(top.image)}" alt="">
+        <img src="${esc(top.image)}" alt="" fetchpriority="high">
       </button>
       <h2 class="featured__title">${esc(shortName(top.title))}</h2>
-      <p class="price price--lg"><strong>${euro(top.price)}</strong>${top.oldPrice ? `<s>${euro(top.oldPrice)}</s>` : ""}</p>
+      <p class="price price--lg"><strong>${euro(top.price)}</strong>${oldPrice(top)}</p>
       <div class="card__actions">
         <a class="btn btn--red" href="${esc(top.link)}" target="_blank" rel="noopener sponsored">¡Lo quiero!</a>
         <button class="btn btn--outline" type="button" data-compare="${top.id}">Comparar precio</button>
@@ -151,8 +159,7 @@
           <div>
             <p class="card__meta"><span>${esc(d.category)}</span><span>${ago(d.date)}</span></p>
             <h2 id="modal-title">${esc(d.title)}</h2>
-            <p class="price price--lg"><strong>${euro(d.price)}</strong>${d.oldPrice ? `<s>${euro(d.oldPrice)}</s>` : ""}${d.discount ? `<span class="pill">−${d.discount}%</span>` : ""}</p>
-            ${d.oldLabel && d.oldPrice ? `<p class="muted">Precio tachado: ${esc(d.oldLabel.toLowerCase())}.</p>` : ""}
+            <p class="price price--lg"><strong>${euro(d.price)}</strong>${oldPrice(d)}${d.discount ? `<span class="pill">−${d.discount}%</span>` : ""}</p>
             <a class="btn btn--red" href="${esc(d.link)}" target="_blank" rel="noopener sponsored">Comprar en ${esc(d.store)} por ${euro(d.price)}</a>
           </div>
         </div>
@@ -248,6 +255,7 @@
   renderCats();
   renderHero();
   if (initial) setQuery(initial); else render();
+  window.cuentaCifras?.($$("[data-stat]"));
 
   // Mientras la página está abierta, mira cada 2 minutos si el servidor tiene chollos nuevos.
   async function refresh() {
