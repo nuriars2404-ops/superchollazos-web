@@ -1,0 +1,44 @@
+{
+  "detector": {
+    "ignoreRules": [],
+    "ignoreFiles": [],
+    "ignoreValues": [
+      {
+        "rule": "gradient-text",
+        "value": "*",
+        "files": [
+          "assets/style.css"
+        ],
+        "createdAt": "2026-10-27T17:57:10.553Z",
+        "reason": "Claude: replica las letras cromadas plateadas del logo de la marca (~/Desktop/SYS logo), es identidad de marca y no decoración"
+      },
+      {
+        "rule": "dark-glow",
+        "value": "*",
+        "files": [
+          "assets/style.css"
+        ],
+        "createdAt": "2026-10-27T17:57:47.969Z",
+        "reason": "Claude: replica el #número amarillo con brillo de la intro de los reels de la marca (memoria de estilo de vídeo)"
+      },
+      {
+        "rule": "gradient-text",
+        "value": "*",
+        "files": [
+          "index.html"
+        ],
+        "createdAt": "2026-10-27T17:58:12.987Z",
+        "reason": "Claude: identidad de marca (letras cromadas del logo y #número amarillo con brillo de los reels); mismo criterio que en assets/style.css"
+      },
+      {
+        "rule": "dark-glow",
+        "value": "*",
+        "files": [
+          "index.html"
+        ],
+        "createdAt": "2026-10-27T17:58:13.000Z",
+        "reason": "Claude: identidad de marca (letras cromadas del logo y #número amarillo con brillo de los reels); mismo criterio que en assets/style.css"
+      }
+    ]
+  }
+}
