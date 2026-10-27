@@ -1,0 +1,3 @@
+User-agent: *
+Allow: /
+Sitemap: https://nuriars2404-ops.github.io/superchollazos-web/sitemap.xml
