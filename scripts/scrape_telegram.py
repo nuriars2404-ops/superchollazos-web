@@ -80,6 +80,29 @@ def arregla_foto(url):
     return f"https://m.media-amazon.com/images/I/{m.group(1)}._AC_SL500_.jpg" if m else url
 
 
+def condiciones(text):
+    """Lee lo que hace falta para llegar al precio: el código y extras como cupón, CR o descuento al tramitar."""
+    code = re.search(r"C[óo]digo:\s*([A-Za-z0-9_-]{3,})", text)
+    linea = re.search(r"DESCUENTO:?\s*\d+\s*%([^\n]*)", text)
+    conds = []
+    for parte in re.split(r"\+", linea.group(1) if linea else ""):
+        t = re.sub(r"^con\s+", "", parte.strip(), flags=re.I).strip()
+        if not t or re.fullmatch(r"c[óo]digo", t, re.I):
+            continue
+        t = re.sub(r"\bCR\b", "compra recurrente", t)
+        t = re.sub(r"cup[oó]n", "cupón", t, flags=re.I)
+        t = re.sub(r"al tr[aá]mit\w*", "al tramitar", t, flags=re.I)
+        t = re.sub(r"^(\d+\s*[%€]) cupón$", r"cupón \1", t)
+        if t == "al tramitar":
+            t = "descuento al tramitar"
+        elif re.fullmatch(r"[\d.,]+\s*[%€]", t):
+            t += " de descuento"
+        conds.append(t)
+    if linea and re.search(r"c[óo]digo", linea.group(1), re.I) and not code:
+        conds.append("código")
+    return (code.group(1) if code else None), conds
+
+
 def categorize(title):
     t = title.lower()
     for name, pattern in CATEGORIES.items():
@@ -133,6 +156,8 @@ def parse_message(block):
         "image": arregla_foto(img.group(1)) if img else None,
         "link": link.group(1),
         "category": categorize(title),
+        "code": condiciones(text)[0],
+        "conds": condiciones(text)[1],
     }
 
 

@@ -67,6 +67,25 @@
     return list;
   }
 
+  const precioTienda = (d) => (window.PRECIOS || {})[d.asin || String(d.id)];
+
+  // Lo que hace falta para llegar al precio del chollo: el código para copiar o los extras del canal.
+  function condicion(d) {
+    const conds = d.conds || [];
+    return [
+      d.code ? `<button class="codigo" type="button" data-copy="${esc(d.code)}"><span>Precio con código</span><b>${esc(d.code)}</b><em>Copiar</em></button>` : "",
+      conds.length ? `<p class="cond">Precio final con ${esc(conds.join(" + "))}</p>` : "",
+    ].join("");
+  }
+
+  // Sin código ni extras, una subida grande en la tienda suele significar que la oferta terminó.
+  function terminado(d) {
+    const a = precioTienda(d)?.amazon;
+    if (d.code || (d.conds || []).length || !a) return "";
+    return a.precio >= d.price * 1.25 && a.precio - d.price >= 2
+      ? `<p class="aviso">Puede haber terminado, comprueba el precio</p>` : "";
+  }
+
   function card(d) {
     return `
       <article class="card" data-id="${d.id}">
@@ -81,6 +100,7 @@
             ${oldPrice(d)}
             ${d.discount ? `<span class="pill pill--red">−${d.discount}%</span>` : ""}
           </p>
+          ${condicion(d)}${terminado(d)}
           <div class="card__actions">
             <a class="btn btn--red btn--sm" href="${esc(d.link)}" target="_blank" rel="noopener sponsored">Ver en ${esc(d.store)}</a>
             <button class="btn btn--outline btn--sm" type="button" data-compare="${d.id}">Comparar</button>
@@ -134,6 +154,7 @@
       </button>
       <h2 class="featured__title">${esc(shortName(top.title))}</h2>
       <p class="price price--lg"><strong>${euro(top.price)}</strong>${oldPrice(top)}</p>
+      ${condicion(top)}${terminado(top)}
       <div class="card__actions">
         <a class="btn btn--red" href="${esc(top.link)}" target="_blank" rel="noopener sponsored">¡Lo quiero!</a>
         <button class="btn btn--outline" type="button" data-compare="${top.id}">Comparar precio</button>
@@ -142,7 +163,7 @@
 
   // Precios consultados en las tiendas. Se muestra cuándo, porque pueden cambiar; solo se enlaza lo que coincide.
   function preciosAhora(d) {
-    const p = (window.PRECIOS || {})[d.asin || String(d.id)];
+    const p = precioTienda(d);
     if (!p || !(p.amazon || p.ali)) return "";
     const fila = (tienda, x, nota) => `
       <a class="store" href="${esc(x.url)}" target="_blank" rel="noopener sponsored">
@@ -151,10 +172,11 @@
       </a>`;
     return `
         <section class="cmp__sec">
-          <h3>Precio ahora</h3>
+          <h3>Precio en la tienda</h3>
+          <p class="muted">Es el precio de la ficha, sin códigos ni cupones.${d.code || (d.conds || []).length ? ` Con lo que indica este chollo baja a ${euro(d.price)}.` : ""}</p>
           <div class="stores stores--modal">
-            ${p.amazon ? fila("Amazon", p.amazon, `Consultado ${ago(new Date(p.amazon.t * 1000))}`) : ""}
-            ${p.ali ? fila("AliExpress", p.ali, `Consultado ${ago(new Date(p.ali.t * 1000))}, sin contar envío`) : ""}
+            ${p.amazon ? fila("Amazon", p.amazon, `Sin código, consultado ${ago(new Date(p.amazon.t * 1000))}`) : ""}
+            ${p.ali ? fila("AliExpress", p.ali, `Sin código ni envío, consultado ${ago(new Date(p.ali.t * 1000))}`) : ""}
           </div>
           ${p.ali ? `<p class="muted">Producto parecido en AliExpress: ${esc(p.ali.titulo)}. Comprueba que es lo que buscas.</p>` : ""}
         </section>`;
@@ -180,6 +202,7 @@
             <p class="card__meta"><span>${esc(d.category)}</span><span>${ago(d.date)}</span></p>
             <h2 id="modal-title">${esc(d.title)}</h2>
             <p class="price price--lg"><strong>${euro(d.price)}</strong>${oldPrice(d)}${d.discount ? `<span class="pill">−${d.discount}%</span>` : ""}</p>
+            ${condicion(d)}${terminado(d)}
             <a class="btn btn--red" href="${esc(d.link)}" target="_blank" rel="noopener sponsored">Comprar en ${esc(d.store)} por ${euro(d.price)}</a>
           </div>
         </div>
@@ -243,9 +266,11 @@
   });
 
   document.addEventListener("click", (e) => {
-    const el = e.target.closest("[data-q],[data-cat],[data-max],[data-min-disc],[data-compare],[data-more],[data-close]");
+    const el = e.target.closest("[data-copy],[data-q],[data-cat],[data-max],[data-min-disc],[data-compare],[data-more],[data-close]");
     if (!el) return;
-    if (el.dataset.q) {
+    if (el.dataset.copy) {
+      copia(el.dataset.copy);
+    } else if (el.dataset.q) {
       setQuery(el.dataset.q);
       $("[data-compare-strip]").scrollIntoView({ behavior: "smooth", block: "start" });
     } else if (el.dataset.cat) {
@@ -296,6 +321,20 @@
       render();
       if (fresh) toast(`🔥 ${fresh} ${fresh === 1 ? "chollo nuevo" : "chollos nuevos"}`);
     } catch { /* sin conexión: se reintenta en la siguiente vuelta */ }
+  }
+
+  async function copia(texto) {
+    try {
+      await navigator.clipboard.writeText(texto);
+    } catch {
+      const c = document.createElement("textarea");
+      c.value = texto;
+      document.body.append(c);
+      c.select();
+      document.execCommand("copy");
+      c.remove();
+    }
+    toast(`Código ${texto} copiado`);
   }
 
   function toast(text) {
