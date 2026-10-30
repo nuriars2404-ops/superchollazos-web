@@ -216,14 +216,6 @@
           <ul class="hist">${history.map((h) => `<li><span>${new Date(h.date).toLocaleString("es-ES", { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" })}</span><strong>${euro(h.price)}</strong>${h.price === lowest ? `<em>más barato</em>` : ""}</li>`).join("")}</ul>
         </section>` : ""}
 
-        ${d.asin && d.store === "Amazon" ? `
-        <section class="cmp__sec">
-          <h3>Historial de precio en Amazon</h3>
-          <div class="chart">
-            <img src="https://charts.camelcamelcamel.com/es/${esc(d.asin)}/amazon.png?force=1&zero=0&w=720&h=300&tp=3m&lang=es_ES" alt="Gráfica del precio en Amazon en los últimos 90 días" loading="lazy" onerror="this.closest('.cmp__sec').remove()">
-          </div>
-          <p class="muted">Últimos 3 meses, datos de CamelCamelCamel. Si la línea está en su punto más bajo, es buen momento para comprar.</p>
-        </section>` : ""}
 
         ${preciosAhora(d)}
 
