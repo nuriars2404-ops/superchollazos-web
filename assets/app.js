@@ -140,6 +140,26 @@
       </div>`;
   }
 
+  // Precios consultados en las tiendas. Se muestra cuándo, porque pueden cambiar; solo se enlaza lo que coincide.
+  function preciosAhora(d) {
+    const p = (window.PRECIOS || {})[d.asin || String(d.id)];
+    if (!p || !(p.amazon || p.ali)) return "";
+    const fila = (tienda, x, nota) => `
+      <a class="store" href="${esc(x.url)}" target="_blank" rel="noopener sponsored">
+        <span class="store__name">${tienda}<small>${nota}</small></span>
+        <strong class="store__precio">${euro(x.precio)}</strong>
+      </a>`;
+    return `
+        <section class="cmp__sec">
+          <h3>Precio ahora</h3>
+          <div class="stores stores--modal">
+            ${p.amazon ? fila("Amazon", p.amazon, `Consultado ${ago(new Date(p.amazon.t * 1000))}`) : ""}
+            ${p.ali ? fila("AliExpress", p.ali, `Consultado ${ago(new Date(p.ali.t * 1000))}, sin contar envío`) : ""}
+          </div>
+          ${p.ali ? `<p class="muted">Producto parecido en AliExpress: ${esc(p.ali.titulo)}. Comprueba que es lo que buscas.</p>` : ""}
+        </section>`;
+  }
+
   function openCompare(id) {
     const d = deals.find((x) => x.id === id);
     if (!d) return;
@@ -178,6 +198,8 @@
           </a>
           <p class="muted">Últimos 3 meses, datos de CamelCamelCamel. Si la línea está en su punto más bajo, es buen momento para comprar.</p>
         </section>` : ""}
+
+        ${preciosAhora(d)}
 
         <section class="cmp__sec">
           <h3>Búscalo en otras tiendas</h3>

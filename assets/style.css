@@ -295,5 +295,7 @@ h1.trocea.go .pal { opacity: 1; transform: none; filter: none; }
 /* Lienzo de las chispas al pulsar */
 .chispas { position: fixed; inset: 0; width: 100%; height: 100%; pointer-events: none; z-index: 60; }
 
+.store__precio { font: 400 22px/1 var(--display); color: var(--red-ink); font-variant-numeric: tabular-nums; }
+
 :focus-visible { outline: 3px solid var(--yellow); outline-offset: 2px; }
 @media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation: none !important; transition: none !important; } }

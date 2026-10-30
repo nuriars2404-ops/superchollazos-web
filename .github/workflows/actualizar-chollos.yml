@@ -30,6 +30,17 @@ jobs:
         with:
           python-version: "3.12"
       - run: python3 scripts/scrape_telegram.py --pages 15
+      - run: pip install --quiet python-amazon-paapi
+      - name: Consultar precios en Amazon y AliExpress
+        env:
+          AMAZON_CREDENTIAL_ID: ${{ secrets.AMAZON_CREDENTIAL_ID }}
+          AMAZON_CREDENTIAL_SECRET: ${{ secrets.AMAZON_CREDENTIAL_SECRET }}
+          AMAZON_CREDENTIAL_VERSION: ${{ secrets.AMAZON_CREDENTIAL_VERSION }}
+          ALIEXPRESS_APP_KEY: ${{ secrets.ALIEXPRESS_APP_KEY }}
+          ALIEXPRESS_APP_SECRET: ${{ secrets.ALIEXPRESS_APP_SECRET }}
+          ALIEXPRESS_TRACKING_ID: ${{ secrets.ALIEXPRESS_TRACKING_ID }}
+        run: python3 scripts/precios.py
+        continue-on-error: true
       - name: Guardar chollos en el repositorio
         run: |
           git config user.name "chollos-bot"
