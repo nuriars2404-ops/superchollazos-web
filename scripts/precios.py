@@ -58,7 +58,8 @@ def precios_amazon(deals, guardados):
     from amazon_creatorsapi import AmazonCreatorsApi
     from creatorsapi_python_sdk.models.get_items_resource import GetItemsResource as R
 
-    tag = os.environ.get("AMAZON_TAG", "doradita-21")
+    tag = os.environ.get("AMAZON_TAG", "doradita-21")  # la etiqueta asociada a estas claves
+    tag_enlaces = os.environ.get("AMAZON_TAG_ENLACES", "laurasoyyo02-21")  # la que llevan los enlaces de la web
     asins = sorted({d["asin"] for d in deals if d.get("asin")
                     and ahora() - guardados.get(d["asin"], {}).get("amazon", {}).get("t", 0) > AMAZON_CADUCA})
     if not asins:
@@ -71,7 +72,8 @@ def precios_amazon(deals, guardados):
         listings = it.offers_v2.listings if it.offers_v2 and it.offers_v2.listings else []
         if listings and listings[0].price and listings[0].price.money:
             guardados.setdefault(it.asin, {})["amazon"] = {
-                "precio": float(listings[0].price.money.amount), "url": it.detail_page_url, "t": ahora()}
+                "precio": float(listings[0].price.money.amount),
+                "url": re.sub(r"([?&]tag=)[^&]+", r"\g<1>" + tag_enlaces, it.detail_page_url), "t": ahora()}
             ok += 1
     print(f"Amazon: {ok} precios de {len(asins)} productos")
 
@@ -113,9 +115,10 @@ def precios_aliexpress(deals, guardados):
                      if buscadas and len(buscadas & palabras(p.get("product_title", ""))) / len(buscadas) >= COINCIDENCIA_MIN]
         g = guardados.setdefault(clave, {})
         g["ali_t"] = ahora()
+        parecidos = [p for p in parecidos if p.get("promotion_link")]  # sin enlace de afiliada no hay comisión
         if parecidos:
             mejor = min(parecidos, key=lambda p: float(p.get("target_sale_price") or 1e9))
-            g["ali"] = {"precio": float(mejor["target_sale_price"]), "url": mejor.get("promotion_link") or mejor.get("product_detail_url"),
+            g["ali"] = {"precio": float(mejor["target_sale_price"]), "url": mejor["promotion_link"],
                         "titulo": mejor.get("product_title", ""), "t": ahora()}
             ok += 1
         else:

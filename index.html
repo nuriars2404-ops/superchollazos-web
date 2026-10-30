@@ -4,13 +4,13 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <title>Superchollazos y Sorteos</title>
-  <meta name="description" content="Ofertas top de Amazon y AliExpress. Ahorra cada día sin buscar durante horas: chollos diarios, comparador de precios y sorteos.">
+  <meta name="description" content="Ofertas top de Amazon y AliExpress. Ahorra cada día sin buscar durante horas: chollos diarios y sorteos.">
   <meta name="theme-color" content="#0E0E10">
   <link rel="canonical" href="https://nuriars2404-ops.github.io/superchollazos-web/">
   <meta property="og:type" content="website">
   <meta property="og:site_name" content="Superchollazos y Sorteos">
   <meta property="og:title" content="Superchollazos y Sorteos · Chollos diarios">
-  <meta property="og:description" content="Ofertas top de Amazon y AliExpress, cazadas cada día. Compara precios y participa en los sorteos.">
+  <meta property="og:description" content="Ofertas top de Amazon y AliExpress, cazadas cada día. Chollos diarios y sorteos.">
   <meta property="og:url" content="https://nuriars2404-ops.github.io/superchollazos-web/">
   <meta property="og:image" content="https://nuriars2404-ops.github.io/superchollazos-web/assets/img/compartir.jpg">
   <meta property="og:image:width" content="1200">
@@ -20,7 +20,7 @@
   <link rel="icon" href="assets/img/logo.jpg">
   <link rel="preload" href="assets/fonts/anton-400-latin.woff2" as="font" type="font/woff2" crossorigin>
   <link rel="stylesheet" href="assets/fonts.css?v=1">
-  <link rel="stylesheet" href="assets/style.css?v=8">
+  <link rel="stylesheet" href="assets/style.css?v=9">
 </head>
 <body>
   <header class="topbar">
@@ -31,7 +31,7 @@
       </a>
       <form class="search search--top" role="search" data-search>
         <svg aria-hidden="true" viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
-        <input type="search" name="q" placeholder="Busca y compara precios…" autocomplete="off" aria-label="Buscar chollos">
+        <input type="search" name="q" placeholder="Busca chollos…" autocomplete="off" aria-label="Buscar chollos">
       </form>
       <a class="btn btn--fb" href="https://www.facebook.com/groups/374349280265857/" target="_blank" rel="noopener" aria-label="Grupo de Facebook">
         <svg aria-hidden="true" viewBox="0 0 24 24"><path d="M14 8.5V6.8c0-.8.2-1.3 1.4-1.3H17V2.3c-.3 0-1.3-.1-2.5-.1-2.5 0-4.2 1.5-4.2 4.3v2H7.6v3.6h2.7V22H14v-9.9h2.8l.4-3.6H14Z"/></svg>
@@ -50,11 +50,11 @@
         <div class="hero__copy">
           <p class="alert"><span class="alert__arrows" aria-hidden="true">›››</span> ¡Alerta, superchollazo! <span class="alert__arrows" aria-hidden="true">‹‹‹</span></p>
           <h1><span class="chrome">Los chollos<br>que necesitas,</span><br><span class="red">sin buscar<br>durante horas</span></h1>
-          <p class="lede">Ofertas top de Amazon y AliExpress, cazadas cada día. Y si buscas algo concreto, te decimos dónde está más barato.</p>
+          <p class="lede">Ofertas top de Amazon y AliExpress, cazadas cada día. Busca lo que necesitas y encuentra el chollo sin perder tiempo.</p>
           <form class="search search--hero" role="search" data-search>
             <svg aria-hidden="true" viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
-            <input type="search" name="q" placeholder="¿Qué buscas? Ej. freidora de aire" autocomplete="off" aria-label="Buscar y comparar precios">
-            <button class="btn btn--red" type="submit">Comparar</button>
+            <input type="search" name="q" placeholder="¿Qué buscas? Ej. freidora de aire" autocomplete="off" aria-label="Buscar chollos">
+            <button class="btn btn--red" type="submit">Buscar</button>
           </form>
           <div class="chips chips--popular" aria-label="Búsquedas populares">
             <span class="chips__label">Lo más buscado:</span>
@@ -82,10 +82,10 @@
     <section class="compare-strip" data-compare-strip hidden>
       <div class="wrap">
         <div class="compare-strip__head">
-          <h2>Compara «<span data-compare-q></span>» en todas las tiendas</h2>
-          <p>Abre la búsqueda en cada tienda y quédate con el precio más bajo.</p>
+          <h2>¿No es lo que buscas? Míralo en Amazon</h2>
+          <p>Buscamos «<span data-compare-q></span>» por ti en Amazon.</p>
         </div>
-        <div class="stores" data-store-links></div>
+        <a class="btn btn--red btn--lg" data-amazon-search target="_blank" rel="noopener sponsored">Ver en Amazon</a>
       </div>
     </section>
 
@@ -114,7 +114,7 @@
         <noscript><p class="empty">Para ver los chollos activa JavaScript, o entra directamente en nuestro <a href="https://t.me/superchollazosysorteos">canal de Telegram</a>.</p></noscript>
         <div class="empty" data-empty hidden>
           <p class="empty__title">Ahora mismo no hay chollos de eso en el canal.</p>
-          <p>Pero puedes compararlo en las tiendas de arriba, o pedírnoslo en Telegram y lo cazamos.</p>
+          <p>Míralo en Amazon con el botón de arriba, o pídenoslo en Telegram y lo cazamos.</p>
         </div>
         <div class="more"><button class="btn btn--outline" type="button" data-more hidden>Ver más chollos</button></div>
       </div>
@@ -151,8 +151,8 @@
 
   <script src="data/deals.js"></script>
   <script src="data/precios.js"></script>
-  <script src="assets/config.js?v=8"></script>
-  <script src="assets/movimiento.js?v=8"></script>
-  <script src="assets/app.js?v=8"></script>
+  <script src="assets/config.js?v=9"></script>
+  <script src="assets/movimiento.js?v=9"></script>
+  <script src="assets/app.js?v=9"></script>
 </body>
 </html>

@@ -27,21 +27,7 @@
     return head.split(/\s+/).slice(0, 8).join(" ");
   }
 
-  function storeUrl(store, query) {
-    return store.url
-      .replace("{q}", encodeURIComponent(query))
-      .replace("{dash}", encodeURIComponent(norm(query).replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "")))
-      .replace("{tag}", CONFIG.amazonTag);
-  }
-
-  function storeLinks(query) {
-    return CONFIG.stores.map((s) => `
-      <a class="store" href="${esc(storeUrl(s, query))}" target="_blank" rel="noopener sponsored">
-        <span class="store__dot" style="--c:${s.color}">${esc(s.name[0])}</span>
-        <span class="store__name">${esc(s.name)}<small>${esc(s.note || "Ver precio")}</small></span>
-        <span class="store__go" aria-hidden="true"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 17 17 7M8 7h9v9"/></svg></span>
-      </a>`).join("");
-  }
+  const amazonSearch = (q) => `https://www.amazon.es/s?k=${encodeURIComponent(q)}&tag=${CONFIG.amazonTag}`;
 
   // En España solo se puede tachar el precio más bajo de los últimos 30 días.
   // Si el canal compara con otra referencia (PVP recomendado, precio mediano), se muestra sin tachar y diciendo cuál es.
@@ -89,7 +75,7 @@
   function card(d) {
     return `
       <article class="card" data-id="${d.id}">
-        <button class="card__media" type="button" data-compare="${d.id}" aria-label="Comparar precio de ${esc(shortName(d.title))}">
+        <button class="card__media" type="button" data-compare="${d.id}" aria-label="Ver detalles de ${esc(shortName(d.title))}">
           ${d.image ? `<img src="${esc(d.image)}" alt="" loading="lazy" decoding="async">` : `<span class="card__noimg">🔥</span>`}
         </button>
         <div class="card__body">
@@ -103,7 +89,7 @@
           ${condicion(d)}${terminado(d)}
           <div class="card__actions">
             <a class="btn btn--red btn--sm" href="${esc(d.link)}" target="_blank" rel="noopener sponsored">Ver en ${esc(d.store)}</a>
-            <button class="btn btn--outline btn--sm" type="button" data-compare="${d.id}">Comparar</button>
+            <button class="btn btn--outline btn--sm" type="button" data-compare="${d.id}">Ver detalles</button>
           </div>
         </div>
       </article>`;
@@ -123,7 +109,7 @@
     strip.hidden = !state.q;
     if (state.q) {
       $("[data-compare-q]").textContent = state.q;
-      $("[data-store-links]").innerHTML = storeLinks(state.q);
+      $("[data-amazon-search]").href = amazonSearch(state.q);
     }
   }
 
@@ -149,7 +135,7 @@
     if (!top) return;
     $("[data-featured]").innerHTML = `
       <p class="featured__tag"><b>#1</b> Chollo del día</p>
-      <button class="featured__media" type="button" data-compare="${top.id}" aria-label="Comparar precio">
+      <button class="featured__media" type="button" data-compare="${top.id}" aria-label="Ver detalles">
         <img src="${esc(top.image)}" alt="" fetchpriority="high">
       </button>
       <h2 class="featured__title">${esc(shortName(top.title))}</h2>
@@ -157,7 +143,7 @@
       ${condicion(top)}${terminado(top)}
       <div class="card__actions">
         <a class="btn btn--red" href="${esc(top.link)}" target="_blank" rel="noopener sponsored">¡Lo quiero!</a>
-        <button class="btn btn--outline" type="button" data-compare="${top.id}">Comparar precio</button>
+        <button class="btn btn--outline" type="button" data-compare="${top.id}">Ver detalles</button>
       </div>`;
   }
 
@@ -216,19 +202,13 @@
         ${d.asin && d.store === "Amazon" ? `
         <section class="cmp__sec">
           <h3>Historial de precio en Amazon</h3>
-          <a class="chart" href="https://es.camelcamelcamel.com/product/${esc(d.asin)}" target="_blank" rel="noopener">
+          <div class="chart">
             <img src="https://charts.camelcamelcamel.com/es/${esc(d.asin)}/amazon.png?force=1&zero=0&w=720&h=300&tp=3m&lang=es_ES" alt="Gráfica del precio en Amazon en los últimos 90 días" loading="lazy" onerror="this.closest('.cmp__sec').remove()">
-          </a>
+          </div>
           <p class="muted">Últimos 3 meses, datos de CamelCamelCamel. Si la línea está en su punto más bajo, es buen momento para comprar.</p>
         </section>` : ""}
 
         ${preciosAhora(d)}
-
-        <section class="cmp__sec">
-          <h3>Búscalo en otras tiendas</h3>
-          <p class="muted">Buscamos «${esc(q)}». Si lo encuentras por menos de ${euro(d.price)}, ¡adelante!</p>
-          <div class="stores stores--modal">${storeLinks(q)}</div>
-        </section>
 
         ${similar.length ? `
         <section class="cmp__sec">

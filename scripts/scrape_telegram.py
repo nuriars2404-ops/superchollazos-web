@@ -210,7 +210,7 @@ def main():
         before = min(ids)
 
     cache = json.loads(CACHE.read_text()) if CACHE.exists() else {}
-    todo = [d["link"] for d in deals.values() if d["link"] not in cache]
+    todo = [d["link"] for d in deals.values() if cache.get(d["link"], d["link"]) == d["link"]]  # reintenta los que fallaron
     with ThreadPoolExecutor(8) as pool:
         for link, final in zip(todo, pool.map(resolve, todo)):
             cache[link] = final
