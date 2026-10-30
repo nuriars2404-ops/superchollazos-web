@@ -64,6 +64,22 @@
     ].join("");
   }
 
+  // Pasos para usar el código, solo en la ficha: en Amazon se mete al pagar, no en la página del producto.
+  function pasosCodigo(d) {
+    if (!d.code || d.store !== "Amazon") return "";
+    return `
+            <section class="pasos" aria-label="Cómo usar el código">
+              <h3>Cómo usar el código</h3>
+              <ol>
+                <li>Copia el código con el botón de arriba.</li>
+                <li>Pulsa en comprar. En la página de pago verás el cuadro <b>Usar código o vale promocional</b>.</li>
+                <li>Pega ahí el código y pulsa la flechita de la derecha.</li>
+                <li>Pulsa <b>Usar este método de pago</b>.</li>
+                <li>Comprueba que aparece el descuento y confirma la compra.</li>
+              </ol>
+            </section>`;
+  }
+
   // Sin código ni extras, una subida grande en la tienda suele significar que la oferta terminó.
   function terminado(d) {
     const a = precioTienda(d)?.amazon;
@@ -189,6 +205,7 @@
             <h2 id="modal-title">${esc(d.title)}</h2>
             <p class="price price--lg"><strong>${euro(d.price)}</strong>${oldPrice(d)}${d.discount ? `<span class="pill">−${d.discount}%</span>` : ""}</p>
             ${condicion(d)}${terminado(d)}
+            ${pasosCodigo(d)}
             <a class="btn btn--red" href="${esc(d.link)}" target="_blank" rel="noopener sponsored">Comprar en ${esc(d.store)} por ${euro(d.price)}</a>
           </div>
         </div>
