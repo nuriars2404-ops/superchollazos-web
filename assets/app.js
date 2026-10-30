@@ -80,6 +80,12 @@
             </section>`;
   }
 
+  // Solo aparece si nuestro propio historial lo respalda, con al menos dos semanas de datos.
+  function minimo(d) {
+    const m = precioTienda(d)?.minimo;
+    return m ? `<p class="minimo">Precio más bajo de los últimos ${m.dias} días</p>` : "";
+  }
+
   // Sin código ni extras, una subida grande en la tienda suele significar que la oferta terminó.
   function terminado(d) {
     const a = precioTienda(d)?.amazon;
@@ -102,7 +108,7 @@
             ${oldPrice(d)}
             ${d.discount ? `<span class="pill pill--red">−${d.discount}%</span>` : ""}
           </p>
-          ${condicion(d)}${terminado(d)}
+          ${minimo(d)}${condicion(d)}${terminado(d)}
           <div class="card__actions">
             <a class="btn btn--red btn--sm" href="${esc(d.link)}" target="_blank" rel="noopener sponsored">Ver en ${esc(d.store)}</a>
             <button class="btn btn--outline btn--sm" type="button" data-compare="${d.id}">Ver detalles</button>
@@ -156,7 +162,7 @@
       </button>
       <h2 class="featured__title">${esc(shortName(top.title))}</h2>
       <p class="price price--lg"><strong>${euro(top.price)}</strong>${oldPrice(top)}</p>
-      ${condicion(top)}${terminado(top)}
+      ${minimo(top)}${condicion(top)}${terminado(top)}
       <div class="card__actions">
         <a class="btn btn--red" href="${esc(top.link)}" target="_blank" rel="noopener sponsored">¡Lo quiero!</a>
         <button class="btn btn--outline" type="button" data-compare="${top.id}">Ver detalles</button>
@@ -204,7 +210,7 @@
             <p class="card__meta"><span>${esc(d.category)}</span><span>${ago(d.date)}</span></p>
             <h2 id="modal-title">${esc(d.title)}</h2>
             <p class="price price--lg"><strong>${euro(d.price)}</strong>${oldPrice(d)}${d.discount ? `<span class="pill">−${d.discount}%</span>` : ""}</p>
-            ${condicion(d)}${terminado(d)}
+            ${minimo(d)}${condicion(d)}${terminado(d)}
             ${pasosCodigo(d)}
             <a class="btn btn--red" href="${esc(d.link)}" target="_blank" rel="noopener sponsored">Comprar en ${esc(d.store)} por ${euro(d.price)}</a>
           </div>

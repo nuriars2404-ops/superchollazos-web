@@ -13,17 +13,20 @@ import time
 import unicodedata
 import urllib.parse
 import urllib.request
-from datetime import datetime, timezone
+from datetime import date, datetime, timedelta, timezone
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
 DEALS = ROOT / "data" / "deals.js"
 OUT = ROOT / "data" / "precios.js"
+HISTORIAL = ROOT / "data" / "historial.json"
 
 AMAZON_CADUCA = 3600  # Amazon pide datos recientes: se renuevan cada hora
 ALI_CADUCA = 24 * 3600
 ALI_POR_PASADA = 25  # productos nuevos por ejecución, para no agotar el cupo de la API
 COINCIDENCIA_MIN = 0.6  # parte de las palabras del producto que debe tener el resultado de AliExpress
+DIAS_GUARDADOS = 180
+DIAS_MINIMOS = 14  # con menos historial no se afirma que un precio sea el más bajo
 PALABRAS_VACIAS = {"para", "con", "de", "del", "los", "las", "una", "uno", "pack"}
 
 
@@ -127,6 +130,48 @@ def precios_aliexpress(deals, guardados):
     print(f"AliExpress: {ok} coincidencias en {min(len(pendientes), ALI_POR_PASADA)} productos revisados")
 
 
+def actualiza_historial(deals, guardados, hoy=None):
+    """Guarda el precio más bajo de cada día (tienda o canal) y marca los chollos que son mínimo real.
+
+    En los chollos con código se compara el precio con código, que es el que paga la gente.
+    Sin código, además, la tienda debe seguir a ese precio: si ha subido, la oferta ya no vale.
+    """
+    hoy = hoy or datetime.now(timezone.utc).date()
+    hist = json.loads(HISTORIAL.read_text()) if HISTORIAL.exists() else {}
+    anota = lambda asin, dia, precio: hist.setdefault(asin, {}).__setitem__(
+        dia, min(precio, hist.get(asin, {}).get(dia, precio)))
+    for d in deals:
+        if d.get("asin") and d.get("price"):
+            anota(d["asin"], d["date"][:10], d["price"])
+    for asin, g in guardados.items():
+        if g.get("amazon"):
+            anota(asin, hoy.isoformat(), g["amazon"]["precio"])
+    limite = (hoy - timedelta(days=DIAS_GUARDADOS)).isoformat()
+    hist = {a: {k: v for k, v in dias.items() if k >= limite} for a, dias in hist.items()}
+    hist = {a: dias for a, dias in hist.items() if dias}
+    HISTORIAL.write_text(json.dumps(hist, separators=(",", ":"), sort_keys=True))
+
+    ultimo = {}
+    for d in sorted(deals, key=lambda x: x["date"]):
+        if d.get("asin"):
+            ultimo[d["asin"]] = d
+    marcados = 0
+    for asin, d in ultimo.items():
+        g = guardados.setdefault(asin, {})
+        g.pop("minimo", None)
+        dia = d["date"][:10]
+        anteriores = {k: v for k, v in hist.get(asin, {}).items() if k < dia}
+        if not anteriores:
+            continue
+        dias = (date.fromisoformat(dia) - date.fromisoformat(min(anteriores))).days
+        tienda = g.get("amazon", {}).get("precio")
+        vale = bool(d.get("code") or d.get("conds")) or (tienda is not None and tienda <= d["price"])
+        if dias >= DIAS_MINIMOS and vale and d["price"] < min(anteriores.values()):
+            g["minimo"] = {"dias": dias}
+            marcados += 1
+    print(f"Historial: {len(hist)} productos, {marcados} en su precio más bajo")
+
+
 def main():
     deals = carga_js(DEALS).get("deals", [])
     guardados = carga_js(OUT)
@@ -135,6 +180,10 @@ def main():
             fn(deals, guardados)
         except Exception as e:  # una tienda caída no debe parar la publicación de los chollos
             print(f"{nombre}: fallo {type(e).__name__}: {e}")
+    try:
+        actualiza_historial(deals, guardados)
+    except Exception as e:
+        print(f"Historial: fallo {type(e).__name__}: {e}")
     vigentes = {d.get("asin") or str(d["id"]) for d in deals}
     guardados = {k: v for k, v in guardados.items() if k in vigentes}
     OUT.write_text("window.PRECIOS = " + json.dumps(guardados, ensure_ascii=False) + ";\n")
