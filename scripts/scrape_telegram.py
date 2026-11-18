@@ -13,12 +13,13 @@ import urllib.request
 from concurrent.futures import ThreadPoolExecutor
 from datetime import datetime, timezone
 from pathlib import Path
-from urllib.parse import urlparse
+from urllib.parse import parse_qsl, urlencode, urlparse
 
 CHANNEL = "superchollazosysorteos"
 ROOT = Path(__file__).resolve().parent.parent
 OUT = ROOT / "data" / "deals.js"
 CACHE = ROOT / "data" / "resolved-links.json"
+TAG_AMAZON = "laurasoyyo02-21"  # la cuenta principal: todos los enlaces de Amazon de la web la llevan
 UA = "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126 Safari/537.36"
 
 CATEGORIES = {
@@ -185,6 +186,15 @@ def store_info(url):
     return store, (asin.group(1) if asin else None)
 
 
+def enlace_amazon(url):
+    """Enlace directo a Amazon con la etiqueta principal, o None si no es una ficha de Amazon reconocible."""
+    u = urlparse(url)
+    if u.scheme != "https" or not re.fullmatch(r"(www\.)?amazon\.es", u.netloc.lower()):
+        return None
+    params = [(k, v) for k, v in parse_qsl(u.query, keep_blank_values=True) if k != "tag"]
+    return u._replace(query=urlencode(params + [("tag", TAG_AMAZON)])).geturl()
+
+
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--pages", type=int, default=15, help="páginas de 20 mensajes a recorrer")
@@ -215,7 +225,11 @@ def main():
         for link, final in zip(todo, pool.map(resolve, todo)):
             cache[link] = final
     for d in deals.values():
-        d["store"], d["asin"] = store_info(cache.get(d["link"], d["link"]))
+        final = cache.get(d["link"], d["link"])
+        d["store"], d["asin"] = store_info(final)
+        directo = d["store"] == "Amazon" and enlace_amazon(final)
+        if directo:  # sin pasar por el acortador, y siempre con la etiqueta principal
+            d["canal"], d["link"] = d["link"], directo
 
     out = sorted(deals.values(), key=lambda d: d["id"], reverse=True)
     OUT.parent.mkdir(parents=True, exist_ok=True)
