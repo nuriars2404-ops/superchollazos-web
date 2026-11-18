@@ -10,7 +10,6 @@ import json
 import os
 import re
 import time
-import unicodedata
 import urllib.parse
 import urllib.request
 from datetime import date, datetime, timedelta, timezone
@@ -20,14 +19,12 @@ ROOT = Path(__file__).resolve().parent.parent
 DEALS = ROOT / "data" / "deals.js"
 OUT = ROOT / "data" / "precios.js"
 HISTORIAL = ROOT / "data" / "historial.json"
+RESUELTOS = ROOT / "data" / "resolved-links.json"
 
 AMAZON_CADUCA = 3600  # Amazon pide datos recientes: se renuevan cada hora
 ALI_CADUCA = 24 * 3600
-ALI_POR_PASADA = 25  # productos nuevos por ejecución, para no agotar el cupo de la API
-COINCIDENCIA_MIN = 0.6  # parte de las palabras del producto que debe tener el resultado de AliExpress
 DIAS_GUARDADOS = 180
 DIAS_MINIMOS = 14  # con menos historial no se afirma que un precio sea el más bajo
-PALABRAS_VACIAS = {"para", "con", "de", "del", "los", "las", "una", "uno", "pack"}
 
 
 def ahora():
@@ -39,17 +36,6 @@ def carga_js(path):
         return {}
     t = path.read_text()
     return json.loads(t[t.index("{"): t.rindex("}") + 1])
-
-
-def palabras(texto):
-    t = unicodedata.normalize("NFD", texto.lower())
-    t = "".join(c for c in t if unicodedata.category(c) != "Mn")
-    return {w for w in re.findall(r"[a-z0-9]+", t) if len(w) > 2 and w not in PALABRAS_VACIAS}
-
-
-def nombre_corto(title):
-    head = re.split(r"\s[|–]\s|,|\|", title)[0].strip()
-    return " ".join(head.split()[:8])
 
 
 def precios_amazon(deals, guardados):
@@ -92,42 +78,54 @@ def llama_aliexpress(metodo, params, key, secret):
         return json.loads(r.read().decode())
 
 
+def id_aliexpress(enlace, resueltos):
+    """Número del producto de AliExpress a partir del enlace del canal ya resuelto."""
+    m = re.search(r"/item/(?:product/)?(\d{6,})\.html", resueltos.get(enlace, enlace))
+    return m.group(1) if m else None
+
+
 def precios_aliexpress(deals, guardados):
+    """Precio actual de los chollos de AliExpress, consultando el mismo producto del canal (no uno parecido)."""
     key, secret = os.environ.get("ALIEXPRESS_APP_KEY"), os.environ.get("ALIEXPRESS_APP_SECRET")
     tracking = os.environ.get("ALIEXPRESS_TRACKING_ID")
+    for g in guardados.values():  # versión anterior: productos parecidos, que no eran el mismo
+        g.pop("ali_t", None)
+        if g.get("ali") and not g["ali"].get("id"):
+            g.pop("ali")
     if not (key and secret and tracking):
         print("AliExpress: faltan claves, se omite")
         return
-    pendientes = [d for d in deals
-                  if ahora() - guardados.get(d.get("asin") or str(d["id"]), {}).get("ali_t", 0) > ALI_CADUCA]
-    ok = 0
-    for d in pendientes[:ALI_POR_PASADA]:
-        clave = d.get("asin") or str(d["id"])
-        q = nombre_corto(d["title"])
-        data = llama_aliexpress("aliexpress.affiliate.product.query", {
-            "keywords": q, "tracking_id": tracking, "target_currency": "EUR", "target_language": "ES",
-            "ship_to_country": "ES", "sort": "SALE_PRICE_ASC", "page_size": "20"}, key, secret)
+    resueltos = json.loads(RESUELTOS.read_text()) if RESUELTOS.exists() else {}
+    claves = {}
+    for d in deals:
+        pid = d.get("store") == "AliExpress" and id_aliexpress(d["link"], resueltos)
+        if pid and ahora() - guardados.get(str(d["id"]), {}).get("ali", {}).get("t", 0) > ALI_CADUCA:
+            claves.setdefault(pid, []).append(str(d["id"]))
+    if not claves:
+        print("AliExpress: nada que actualizar")
+        return
+    ok, ids = 0, list(claves)
+    for i in range(0, len(ids), 20):
+        data = llama_aliexpress("aliexpress.affiliate.productdetail.get", {
+            "product_ids": ",".join(ids[i:i + 20]), "tracking_id": tracking, "target_currency": "EUR",
+            "target_language": "ES", "country": "ES"}, key, secret)
         if "error_response" in data:
             e = data["error_response"]
             print("AliExpress: error de la API:", e.get("code"), e.get("msg"), e.get("sub_msg", ""))
             return
-        res = data.get("aliexpress_affiliate_product_query_response", {}).get("resp_result", {}).get("result") or {}
-        productos = (res.get("products") or {}).get("product") or []
-        buscadas = palabras(q)
-        parecidos = [p for p in productos
-                     if buscadas and len(buscadas & palabras(p.get("product_title", ""))) / len(buscadas) >= COINCIDENCIA_MIN]
-        g = guardados.setdefault(clave, {})
-        g["ali_t"] = ahora()
-        parecidos = [p for p in parecidos if p.get("promotion_link")]  # sin enlace de afiliada no hay comisión
-        if parecidos:
-            mejor = min(parecidos, key=lambda p: float(p.get("target_sale_price") or 1e9))
-            g["ali"] = {"precio": float(mejor["target_sale_price"]), "url": mejor["promotion_link"],
-                        "titulo": mejor.get("product_title", ""), "t": ahora()}
-            ok += 1
-        else:
-            g.pop("ali", None)
+        res = data.get("aliexpress_affiliate_productdetail_get_response", {}).get("resp_result", {})
+        productos = ((res.get("result") or {}).get("products") or {}).get("product") or []
+        for p in productos:
+            precio = p.get("target_sale_price") or p.get("sale_price")
+            if not (precio and p.get("promotion_link")):  # sin enlace de afiliada no se muestra
+                continue
+            for clave in claves.get(str(p.get("product_id")), []):
+                guardados.setdefault(clave, {})["ali"] = {
+                    "id": str(p["product_id"]), "precio": float(precio), "url": p["promotion_link"],
+                    "titulo": p.get("product_title", ""), "t": ahora()}
+                ok += 1
         time.sleep(1)
-    print(f"AliExpress: {ok} coincidencias en {min(len(pendientes), ALI_POR_PASADA)} productos revisados")
+    print(f"AliExpress: {ok} precios de {len(ids)} productos")
 
 
 def actualiza_historial(deals, guardados, hoy=None):

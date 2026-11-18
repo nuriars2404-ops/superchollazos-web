@@ -186,7 +186,6 @@
             ${p.amazon ? fila("Amazon", p.amazon, `Sin código, consultado ${ago(new Date(p.amazon.t * 1000))}`) : ""}
             ${p.ali ? fila("AliExpress", p.ali, `Sin código ni envío, consultado ${ago(new Date(p.ali.t * 1000))}`) : ""}
           </div>
-          ${p.ali ? `<p class="muted">Producto parecido en AliExpress: ${esc(p.ali.titulo)}. Comprueba que es lo que buscas.</p>` : ""}
         </section>`;
   }
 
