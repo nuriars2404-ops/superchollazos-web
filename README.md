@@ -30,7 +30,7 @@ Lee la vista pública del canal (t.me/s/superchollazosysorteos), saca precio, de
 3. En el repositorio: Settings → Pages → Source: **GitHub Actions**.
 4. Settings → Actions → General → Workflow permissions: **Read and write permissions**.
 
-A partir de ahí, la acción `.github/workflows/actualizar-chollos.yml` lee el canal cada 10 minutos y publica la web en https://nuriars2404-ops.github.io/superchollazos-web/. Quien tenga la web abierta ve los chollos nuevos sin recargar (se comprueba cada 2 minutos).
+A partir de ahí, la acción `.github/workflows/actualizar-chollos.yml` lee el canal cada 10 minutos y publica la web en https://superchollazosysorteos.es/. Quien tenga la web abierta ve los chollos nuevos sin recargar (se comprueba cada 2 minutos).
 
 ## Ajustes
 
