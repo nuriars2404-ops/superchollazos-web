@@ -1,7 +1,8 @@
 name: Actualizar chollos
 
-# Lee el canal de Telegram cada 10 minutos y publica la web en GitHub Pages.
-# GitHub puede retrasar las ejecuciones programadas unos minutos en horas punta.
+# Lee el canal de Telegram y publica la web en GitHub Pages.
+# GitHub lanza el cron solo unas pocas veces al día cuando va cargado, así que cada pasada
+# programa la siguiente al terminar (paso final). El cron queda de reserva por si la cadena se corta.
 on:
   schedule:
     - cron: "*/10 * * * *"
@@ -13,6 +14,7 @@ permissions:
   contents: write
   pages: write
   id-token: write
+  actions: write
 
 concurrency:
   group: chollos
@@ -47,6 +49,7 @@ jobs:
           git config user.email "chollos-bot@users.noreply.github.com"
           git add data/
           git diff --cached --quiet || git commit -m "Actualizar chollos"
+          git pull --rebase --quiet
           git push
       - uses: actions/configure-pages@v5
       - uses: actions/upload-pages-artifact@v3
@@ -54,3 +57,10 @@ jobs:
           path: .
       - id: deploy
         uses: actions/deploy-pages@v4
+      - name: Programar la siguiente pasada
+        if: always()
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          sleep 420
+          gh workflow run actualizar-chollos.yml --ref main -R "${{ github.repository }}"
