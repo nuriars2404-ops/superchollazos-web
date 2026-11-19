@@ -22,7 +22,7 @@ HISTORIAL = ROOT / "data" / "historial.json"
 RESUELTOS = ROOT / "data" / "resolved-links.json"
 
 AMAZON_CADUCA = 3600  # Amazon pide datos recientes: se renuevan cada hora
-ALI_CADUCA = 24 * 3600
+ALI_CADUCA = 3600  # cada hora, como Amazon: en campañas los precios cambian mucho
 DIAS_GUARDADOS = 180
 DIAS_MINIMOS = 14  # con menos historial no se afirma que un precio sea el más bajo
 
