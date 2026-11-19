@@ -231,12 +231,23 @@ def main():
         if directo:  # sin pasar por el acortador, y siempre con la etiqueta principal
             d["canal"], d["link"] = d["link"], directo
 
+    # Los chollos ya guardados se conservan: scripts/precios.py decide cuáles siguen valiendo.
+    # Dentro de los mensajes leídos ahora manda el canal: si uno se borró o cambió, se actualiza.
+    anteriores = []
+    if OUT.exists():
+        t = OUT.read_text()
+        anteriores = json.loads(t[t.index("{"): t.rindex("}") + 1]).get("deals", [])
+    if before is not None:
+        anteriores = [d for d in anteriores if d["id"] < before]
+    for d in anteriores:
+        deals.setdefault(d["id"], d)
+
     out = sorted(deals.values(), key=lambda d: d["id"], reverse=True)
     OUT.parent.mkdir(parents=True, exist_ok=True)
     CACHE.write_text(json.dumps(cache, ensure_ascii=False, indent=0))
     payload = {"updated": datetime.now(timezone.utc).isoformat(timespec="seconds"), "channel": CHANNEL, "deals": out}
     OUT.write_text("window.CHOLLOS = " + json.dumps(payload, ensure_ascii=False) + ";\n")
-    print(f"{len(out)} chollos guardados en {OUT.relative_to(ROOT)}")
+    print(f"{len(out)} chollos guardados en {OUT.relative_to(ROOT)} ({len(anteriores)} de pasadas anteriores)")
 
 
 if __name__ == "__main__":

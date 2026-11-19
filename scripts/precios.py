@@ -10,6 +10,7 @@ import json
 import os
 import re
 import time
+import unicodedata
 import urllib.parse
 import urllib.request
 from datetime import date, datetime, timedelta, timezone
@@ -25,6 +26,14 @@ AMAZON_CADUCA = 3600  # Amazon pide datos recientes: se renuevan cada hora
 PRECIO_MAX_EDAD = 6 * 3600  # si la tienda deja de dar precio (agotado), no se enseña uno viejo
 ALI_CADUCA = 3600  # cada hora, como Amazon: en campañas los precios cambian mucho
 DIAS_GUARDADOS = 180
+# Cuánto se queda un chollo en la web
+MAX_CHOLLOS = 1500          # tope para que la página siga cargando rápido en el móvil
+DIAS_MAX = 60               # aunque siga a ese precio, a los 60 días deja de ser noticia
+DIAS_SIN_COMPROBAR = 7      # con código o sin precio de tienda no se puede verificar: una semana
+HORAS_TERMINADA = 24        # una oferta terminada se ve tachada un día (la gente llega desde Telegram) y luego se quita
+TALLAS = re.compile(r"\b(tallas?|zapatill\w*|zapatos?|botas|botines|sandalias|chanclas|deportivas|camiset\w*|pantal\w*|"
+                    r"sudadera\w*|chaquet\w*|abrigo\w*|vestidos?|falda\w*|pijama\w*|banador\w*|bikini\w*|calcetin\w*|"
+                    r"sujetador\w*|bragas?|calzoncillo\w*|leggings|jersey\w*|camisa\w*|vaqueros?|chandal\w*|ropa)\b|varios colores")
 DIAS_MINIMOS = 14  # con menos historial no se afirma que un precio sea el más bajo
 
 
@@ -178,6 +187,45 @@ def actualiza_historial(deals, guardados, hoy=None):
     print(f"Historial: {len(hist)} productos, {marcados} en su precio más bajo")
 
 
+def sin_acentos(texto):
+    t = unicodedata.normalize("NFD", texto.lower())
+    return "".join(c for c in t if unicodedata.category(c) != "Mn")
+
+
+def terminado(d, g):
+    """La misma regla que la web (assets/app.js, acabado): sin código, y la tienda bastante más cara."""
+    a = g.get("ali") if d.get("store") == "AliExpress" else g.get("amazon")
+    if d.get("code") or d.get("conds") or not a or d.get("price") is None:
+        return False
+    if TALLAS.search(sin_acentos(f"{d['title']} {d.get('category', '')}")):
+        return False
+    return a["precio"] >= d["price"] * 1.25 and a["precio"] - d["price"] >= 2
+
+
+def depura(deals, guardados, ahora_dt=None):
+    """Deja en la web los chollos que siguen valiendo. Devuelve (quedan, motivos de los quitados)."""
+    ahora_dt = ahora_dt or datetime.now(timezone.utc)
+    quedan, motivos = [], {}
+    for d in sorted(deals, key=lambda x: x["id"], reverse=True):
+        g = guardados.get(d.get("asin") or str(d["id"]), {})
+        horas = (ahora_dt - datetime.fromisoformat(d["date"])).total_seconds() / 3600
+        tienda = g.get("ali") if d.get("store") == "AliExpress" else g.get("amazon")
+        comprobable = tienda and not (d.get("code") or d.get("conds"))
+        if horas > DIAS_MAX * 24:
+            motivo = "más de 60 días"
+        elif terminado(d, g) and horas > HORAS_TERMINADA:
+            motivo = "terminada"
+        elif not comprobable and horas > DIAS_SIN_COMPROBAR * 24:
+            motivo = "sin poder comprobarla (código o sin precio) tras 7 días"
+        elif len(quedan) >= MAX_CHOLLOS:
+            motivo = "tope de chollos"
+        else:
+            quedan.append(d)
+            continue
+        motivos[motivo] = motivos.get(motivo, 0) + 1
+    return quedan, motivos
+
+
 def main():
     deals = carga_js(DEALS).get("deals", [])
     guardados = carga_js(OUT)
@@ -190,6 +238,15 @@ def main():
         actualiza_historial(deals, guardados)
     except Exception as e:
         print(f"Historial: fallo {type(e).__name__}: {e}")
+    try:
+        datos = carga_js(DEALS)
+        quedan, motivos = depura(deals, guardados)
+        if len(quedan) != len(deals):
+            datos["deals"] = deals = quedan
+            DEALS.write_text("window.CHOLLOS = " + json.dumps(datos, ensure_ascii=False) + ";\n")
+        print(f"Chollos: {len(deals)} en la web; quitados {motivos or 'ninguno'}")
+    except Exception as e:
+        print(f"Depuración: fallo {type(e).__name__}: {e}")
     vigentes = {d.get("asin") or str(d["id"]) for d in deals}
     guardados = {k: v for k, v in guardados.items() if k in vigentes}
     OUT.write_text("window.PRECIOS = " + json.dumps(guardados, ensure_ascii=False) + ";\n")
