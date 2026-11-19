@@ -22,6 +22,7 @@ HISTORIAL = ROOT / "data" / "historial.json"
 RESUELTOS = ROOT / "data" / "resolved-links.json"
 
 AMAZON_CADUCA = 3600  # Amazon pide datos recientes: se renuevan cada hora
+PRECIO_MAX_EDAD = 6 * 3600  # si la tienda deja de dar precio (agotado), no se enseña uno viejo
 ALI_CADUCA = 3600  # cada hora, como Amazon: en campañas los precios cambian mucho
 DIAS_GUARDADOS = 180
 DIAS_MINIMOS = 14  # con menos historial no se afirma que un precio sea el más bajo
@@ -64,7 +65,10 @@ def precios_amazon(deals, guardados):
                 "precio": float(listings[0].price.money.amount),
                 "url": re.sub(r"([?&]tag=)[^&]+", r"\g<1>" + tag_enlaces, it.detail_page_url), "t": ahora()}
             ok += 1
-    print(f"Amazon: {ok} precios de {len(asins)} productos")
+    viejos = [a for a in asins if ahora() - guardados.get(a, {}).get("amazon", {}).get("t", ahora()) > PRECIO_MAX_EDAD]
+    for a in viejos:
+        guardados[a].pop("amazon")
+    print(f"Amazon: {ok} precios de {len(asins)} productos; {len(viejos)} sin precio desde hace más de 6 h, retirados")
 
 
 def llama_aliexpress(metodo, params, key, secret):
@@ -125,7 +129,11 @@ def precios_aliexpress(deals, guardados):
                     "titulo": p.get("product_title", ""), "t": ahora()}
                 ok += 1
         time.sleep(1)
-    print(f"AliExpress: {ok} precios de {len(ids)} productos")
+    viejos = [c for cs in claves.values() for c in cs
+              if ahora() - guardados.get(c, {}).get("ali", {}).get("t", ahora()) > PRECIO_MAX_EDAD]
+    for c in viejos:
+        guardados[c].pop("ali")
+    print(f"AliExpress: {ok} precios de {len(ids)} productos; {len(viejos)} retirados por viejos")
 
 
 def actualiza_historial(deals, guardados, hoy=None):
