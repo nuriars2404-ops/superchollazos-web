@@ -50,7 +50,7 @@
       words.every((w) => d._t.includes(w)));
     if (state.sort === "discount") list = [...list].sort((a, b) => (b.discount ?? 0) - (a.discount ?? 0));
     if (state.sort === "price") list = [...list].sort((a, b) => priceOf(a) - priceOf(b));
-    return list;
+    return [...list.filter((d) => !acabado(d)), ...list.filter(acabado)]; // las terminadas, al final
   }
 
   const precioTienda = (d) => (window.PRECIOS || {})[d.asin || String(d.id)];
@@ -87,16 +87,29 @@
   }
 
   // Sin código ni extras, una subida grande en la tienda suele significar que la oferta terminó.
+  // Con código nunca: la tienda enseña el precio sin descuento (y hay códigos que solo tiene el canal).
+  function precioActual(d) {
+    const p = precioTienda(d);
+    return d.store === "AliExpress" ? p?.ali : p?.amazon;
+  }
+
+  // Ropa y calzado: la tienda da el precio de una talla o color, y el barato puede ser otro.
+  const TALLAS = /\b(tallas?|zapatill\w*|zapatos?|botas|botines|sandalias|chanclas|deportivas|camiset\w*|pantal\w*|sudadera\w*|chaquet\w*|abrigo\w*|vestidos?|falda\w*|pijama\w*|banador\w*|bikini\w*|calcetin\w*|sujetador\w*|bragas?|calzoncillo\w*|leggings|jersey\w*|camisa\w*|vaqueros?|chandal\w*|ropa)\b|varios colores/;
+
+  function acabado(d) {
+    const a = precioActual(d);
+    if (d.code || (d.conds || []).length || !a || d.price == null || TALLAS.test(d._t)) return false;
+    return a.precio >= d.price * 1.25 && a.precio - d.price >= 2;
+  }
+
   function terminado(d) {
-    const a = precioTienda(d)?.amazon;
-    if (d.code || (d.conds || []).length || !a) return "";
-    return a.precio >= d.price * 1.25 && a.precio - d.price >= 2
-      ? `<p class="aviso">Puede haber terminado, comprueba el precio</p>` : "";
+    return acabado(d)
+      ? `<p class="aviso">Oferta terminada: ahora está a ${euro(precioActual(d).precio)} en ${esc(d.store)}</p>` : "";
   }
 
   function card(d) {
     return `
-      <article class="card" data-id="${d.id}">
+      <article class="card${acabado(d) ? " card--fin" : ""}" data-id="${d.id}">
         <button class="card__media" type="button" data-compare="${d.id}" aria-label="Ver detalles de ${esc(shortName(d.title))}">
           ${d.image ? `<img src="${esc(d.image)}" alt="" loading="lazy" decoding="async">` : `<span class="card__noimg">🔥</span>`}
         </button>
@@ -144,8 +157,9 @@
 
   function renderHero() {
     const dayAgo = Date.now() - 864e5;
-    const today = deals.filter((d) => new Date(d.date) > dayAgo);
-    const pool = today.length ? today : deals;
+    const vivos = deals.filter((d) => !acabado(d));
+    const today = vivos.filter((d) => new Date(d.date) > dayAgo);
+    const pool = today.length ? today : vivos;
     const withDisc = pool.filter((d) => d.discount);
     $("[data-stat=today]").textContent = today.length;
     $("[data-stat=avg]").textContent = withDisc.length ? `−${Math.round(withDisc.reduce((s, d) => s + d.discount, 0) / withDisc.length)} %` : "–";
@@ -211,7 +225,7 @@
             <p class="price price--lg"><strong>${euro(d.price)}</strong>${oldPrice(d)}${d.discount ? `<span class="pill">−${d.discount}%</span>` : ""}</p>
             ${minimo(d)}${condicion(d)}${terminado(d)}
             ${pasosCodigo(d)}
-            <a class="btn btn--red" href="${esc(d.link)}" target="_blank" rel="noopener sponsored">Comprar en ${esc(d.store)} por ${euro(d.price)}</a>
+            <a class="btn btn--red" href="${esc(d.link)}" target="_blank" rel="noopener sponsored">${acabado(d) ? `Ver precio actual en ${esc(d.store)}` : `Comprar en ${esc(d.store)} por ${euro(d.price)}`}</a>
           </div>
         </div>
 
