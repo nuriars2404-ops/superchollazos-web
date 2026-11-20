@@ -123,7 +123,7 @@
           </p>
           ${minimo(d)}${condicion(d)}${terminado(d)}
           <div class="card__actions">
-            <a class="btn btn--red btn--sm" href="${esc(d.link)}" target="_blank" rel="noopener sponsored">Ver en ${esc(d.store)}</a>
+            <a class="btn btn--red btn--sm" href="${esc(d.link)}" data-deal="${d.id}" target="_blank" rel="noopener sponsored">Ver en ${esc(d.store)}</a>
             <button class="btn btn--outline btn--sm" type="button" data-compare="${d.id}">Ver detalles</button>
           </div>
         </div>
@@ -178,7 +178,7 @@
       <p class="price price--lg"><strong>${euro(top.price)}</strong>${oldPrice(top)}</p>
       ${minimo(top)}${condicion(top)}${terminado(top)}
       <div class="card__actions">
-        <a class="btn btn--red" href="${esc(top.link)}" target="_blank" rel="noopener sponsored">¡Lo quiero!</a>
+        <a class="btn btn--red" href="${esc(top.link)}" data-deal="${top.id}" target="_blank" rel="noopener sponsored">¡Lo quiero!</a>
         <button class="btn btn--outline" type="button" data-compare="${top.id}">Ver detalles</button>
       </div>`;
   }
@@ -225,7 +225,7 @@
             <p class="price price--lg"><strong>${euro(d.price)}</strong>${oldPrice(d)}${d.discount ? `<span class="pill">−${d.discount}%</span>` : ""}</p>
             ${minimo(d)}${condicion(d)}${terminado(d)}
             ${pasosCodigo(d)}
-            <a class="btn btn--red" href="${esc(d.link)}" target="_blank" rel="noopener sponsored">${acabado(d) ? `Ver precio actual en ${esc(d.store)}` : `Comprar en ${esc(d.store)} por ${euro(d.price)}`}</a>
+            <a class="btn btn--red" href="${esc(d.link)}" data-deal="${d.id}" target="_blank" rel="noopener sponsored">${acabado(d) ? `Ver precio actual en ${esc(d.store)}` : `Comprar en ${esc(d.store)} por ${euro(d.price)}`}</a>
           </div>
         </div>
 
@@ -254,8 +254,18 @@
     requestAnimationFrame(() => { $(".modal__body", modal).scrollTop = 0; });
   }
 
+  // Estadísticas (GoatCounter, sin cookies): qué se busca y en qué chollos se pulsa para ir a la tienda.
+  const anota = (path, title) => { try { window.goatcounter?.count?.({ path, title, event: true }); } catch {} };
+  const buscadas = new Set();
+  let tAnota;
+
   // Eventos
   function setQuery(q) {
+    clearTimeout(tAnota);
+    const n = norm(q.trim());
+    if (n.length >= 3 && !buscadas.has(n)) {
+      tAnota = setTimeout(() => { buscadas.add(n); anota(`busqueda/${n}`, `Búsqueda: ${q.trim()}`); }, 1500);
+    }
     state.q = q.trim();
     state.shown = PAGE;
     $$("[data-search] input").forEach((i) => { if (i.value !== q) i.value = q; });
@@ -272,6 +282,17 @@
       (state.q ? $("[data-compare-strip]") : $("#chollos")).scrollIntoView({ behavior: "smooth", block: "start" });
     });
   });
+
+  document.addEventListener("click", (e) => {
+    const ir = e.target.closest("a[data-deal],a[data-amazon-search]");
+    if (ir) {
+      const d = deals.find((x) => String(x.id) === ir.dataset.deal);
+      if (d) anota(`clic/${d.id}`, `${d.store}: ${shortName(d.title)}`);
+      else anota("clic/busqueda-amazon", `Amazon: búsqueda «${state.q}»`);
+    }
+    const cp = e.target.closest("[data-copy]");
+    if (cp) anota(`codigo/${cp.dataset.copy}`, `Código copiado: ${cp.dataset.copy}`);
+  }, true);
 
   document.addEventListener("click", (e) => {
     const el = e.target.closest("[data-copy],[data-q],[data-cat],[data-max],[data-min-disc],[data-compare],[data-more],[data-close]");
