@@ -23,18 +23,18 @@ TAG_AMAZON = "laurasoyyo02-21"  # la cuenta principal: todos los enlaces de Amaz
 UA = "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126 Safari/537.36"
 
 CATEGORIES = {
-    "Niños y juguetes": r"juguete|niñ[oa]s|bebé|bebe|infantil|lego|playmobil|play-doh|barbie|vtech|peluche|muñec|puzzle|disney|stitch|paw patrol|hot wheels|pañal|beyblade|biberón|biberon|nuk |juego de mesa|juego musical|little live pets|disfraz|first steps",
-    "Belleza y cuidado": r"crema|sérum|serum|maquillaje|champú|champu|cabello|pelo|secador|plancha de pelo|\brizador|perfume|colonia|uñas|labial|rímel|mascarilla|depiladora|afeitadora|cepillo de dientes|dental|oral-b|facial|skincare|loción|desodorante|gel de ducha|cosmétic|corrector|máscara de pestañas|mascara de pestañas|pestañas|protector solar|spf|urea|íntimo|intimo|desmaquill|granos|capilar|oneblade|pasta de dientes|preservativo|condon|bourjois|essence|rimmel|vichy",
-    "Cocina": r"cocina|sartén|sarten|olla|cafetera|café|cafe|freidora|air ?fryer|batidora|tostadora|microondas|vaso|taza|cuchill|tupper|fiambrera|robot de cocina|hervidor|tetera|plato|cubierto|termo|botella|monix|bra |tefal|cecotec|especiero|molde|horno",
-    "Hogar y limpieza": r"hogar|limpi|aspirador|fregona|mopa|detergente|suavizante|lavavajillas|toalla|sábana|sabana|edredón|almohada|colchón|cortina|lámpara|lampara|bombilla|organizador|cesto|percha|alfombra|mueble|estantería|deshumidificador|calefactor|radiador|ventilador|manta|cojín|papel higiénico|fairy|ariel|finish|silla|funda nórdica|ropa de cama|ambientador|air wick|antical|calgon|jarra filtradora",
-    "Tecnología": r"usb|cable|cargador|auricular|altavoz|bluetooth|móvil|movil|smartphone|iphone|samsung|xiaomi|tablet|portátil|portatil|ordenador|monitor|ratón|raton|teclado|ssd|disco duro|memoria|tarjeta sd|router|wifi|smartwatch|reloj inteligente|power ?bank|batería externa|cámara|camara|alexa|echo|fire tv|kindle|tv |televisor|hdmi|consola|nintendo|playstation|ps5|xbox|arduino|led|joystick|smart tag|batería|bateria",
-    "Mascotas": r"perro|gato|mascota|arenero|pienso|comedero|correa|collar para",
+    "Niños y juguetes": r"juguete|niñ[oa]s|bebé|bebe|infantil|lego|playmobil|play-doh|barbie|vtech|peluche|muñec|puzzle|disney|stitch|paw patrol|hot wheels|pañal|beyblade|biberón|biberon|nuk |juego de mesa|juego musical|little live pets|disfraz|first steps|mascota virtual|bitzee|tamagotchi|figura|muñeca|doll\b|bluey|mega bloks|bizak|fisher-price|gabby|clementoni|nancy|monster high|transformers|fingerlings|trivial|juego de cartas|cuna|mattel|miniverse",
+    "Belleza y cuidado": r"crema|sérum|serum|maquillaje|champú|champu|cabello|pelo|secador|plancha de pelo|\brizador|perfume|colonia|uñas|labial|rímel|mascarilla|depiladora|afeitadora|cepillo de dientes|dental|oral-b|facial|skincare|loción|desodorante|gel de ducha|cosmétic|corrector|máscara de pestañas|mascara de pestañas|pestañas|protector solar|spf|urea|íntimo|intimo|desmaquill|granos|capilar|oneblade|pasta de dientes|preservativo|condon|bourjois|essence|rimmel|vichy|eau de|listerine|enjuague|dove\b|pedicura|contorno de ojos|alisador|remington|rituals|cc creme",
+    "Cocina": r"cocina|sartén|sarten|olla|cafetera|café|cafe|freidora|air ?fryer|batidora|tostadora|microondas|vaso|taza|cuchill|tupper|fiambrera|robot de cocina|hervidor|tetera|plato|cubierto|termo|botella|monix|bra |tefal|cecotec|especiero|molde|horno|le creuset|cocotte|multicooker|microwave|recipientes|herm[eé]tic",
+    "Hogar y limpieza": r"hogar|limpi|aspirador|fregona|mopa|detergente|suavizante|lavavajillas|toalla|sábana|sabana|edredón|almohada|colchón|cortina|lámpara|lampara|bombilla|organizador|cesto|percha|alfombra|mueble|estantería|deshumidificador|calefactor|radiador|ventilador|manta|cojín|papel higiénico|fairy|ariel|finish|silla|funda nórdica|ropa de cama|ambientador|air wick|antical|calgon|jarra filtradora|toallero|lavasecadora|lavadora|secadora|frigor[ií]fico|nevera|(?<!forma de )[aá]rbol de navidad|lenor|carrito de compra|servilleta|plancha de vapor|planchar|planchado|generador de vapor|tendedero|insecticida|antimosquito|desatasc|quitamanchas|vanish|c[oó]moda|canap[eé]|librer[ií]a|biblioteca|marco de fotos|[oó]smosis|filtr|congelador|cajonera|decoraci[oó]n|adornos|pegatinas|vinilos|dekobox|m[aá]quina de coser",
+    "Tecnología": r"usb|cable|cargador|auricular|altavoz|bluetooth|móvil|movil|smartphone|iphone|samsung|xiaomi|tablet|portátil|portatil|ordenador|monitor|ratón|raton|teclado|ssd|disco duro|memoria|tarjeta sd|router|wifi|smartwatch|reloj inteligente|power ?bank|batería externa|cámara|camara|alexa|echo|fire tv|kindle|tv |televisor|hdmi|consola|nintendo|playstation|ps5|xbox|arduino|led|joystick|smart tag|batería|bateria|impresora|videojuego|splatoon|[-–] switch 2\b|para switch|donkey kong|microsoft 365|speaker|instax|cricut|zelda|(?<=[-–] )switch\b|pilas",
+    "Mascotas": r"perro|gato|mascotas?\b(?! virtual)|arenero|pienso|comedero|correa (?:para|de) (?:perro|gato|mascota)|collar para (?:perro|gato)|rascador|transport[ií]n|catit",
     "Coche": r"coche|automóvil|automovil|vehículo|neumático|maletero|volante|parabrisas",
     "Bricolaje y jardín": r"taladro|destornillador|herramienta|bosch|makita|black\+decker|einhell|jardín|jardin|manguera|maceta|planta|tornillo|cinta métrica|nivel láser",
-    "Moda": r"camiseta|pantalón|pantalon|vestido|zapatilla|zapato|bota|calcetin|calcetín|sudadera|chaqueta|abrigo|bolso|mochila|cartera|pijama|sujetador|braga|calzoncillo|leggings|gafas de sol|reloj|pulsera|collar|pendiente|levi|adidas|nike|puma|skechers|jeans|chanclas|zip|polo |trunks|botín|botin|sneaker|calzado|pandora|charm|talla",
-    "Deporte y salud": r"deporte|fitness|yoga|pesas|mancuerna|bicicleta|running|proteína|proteina|vitamina|suplemento|tensiómetro|termómetro|báscula|bascula|masajeador|colágeno|colageno|magnesio|melatonina|complemento alimenticio",
-    "Papelería": r"bolígrafo|boligrafo|lápiz|lapiz|lápices|marcador|cuaderno|stabilo|staedtler|staedler|bic |pocketdoodles",
-    "Alimentación": r"chocolate|galleta|café molido|cápsulas|capsulas|aceite de oliva|cerveza|vino |snack|nescafé|nespresso|dolce gusto|cola cao|patatas|refresco|coca-cola|fanta|7 up|nestea|haribo",
+    "Moda": r"camiseta|pantalón|pantalon|vestido|zapatilla|zapato|bota|calcetin|calcetín|sudadera|chaqueta|abrigo|bolso|mochila|cartera|pijama|sujetador|braga|calzoncillo|leggings|gafas de sol|reloj|pulsera|collar|pendiente|levi|adidas|nike|puma|skechers|jeans|chanclas|zip|polo |trunks|botín|botin|sneaker|calzado|pandora|charm|talla|b[oó]xer|trunk|tote|hobo|ri[ñn]onera|sandalia|crocs|tee\b|billetera|backpack|maleta",
+    "Deporte y salud": r"deporte|fitness|yoga|pesas|mancuerna|bicicleta|running|proteína|proteina|vitamina|suplemento|tensiómetro|termómetro|báscula|bascula|masajeador|colágeno|colageno|magnesio|melatonina|complemento alimenticio|casco|kayak|tapones|nataci[oó]n|track suit",
+    "Papelería": r"bolígrafo|boligrafo|lápiz|lapiz|lápices|marcador|cuaderno|stabilo|staedtler|staedler|bic |pocketdoodles|corrector|tipp-ex|agenda",
+    "Alimentación": r"chocolate|galleta|café molido|cápsulas|capsulas|aceite de oliva|cerveza|vino |snack|nescafé|nespresso|dolce gusto|cola cao|patatas|refresco|coca-cola|fanta|7 up|nestea|haribo|caramelo|chuche|golosina|turr[oó]n|polvor[oó]n|chocolat|salsa|k[eé]tchup|mayonesa|at[uú]n|bebida vegetal|bebida de avena|alpro|yosoy|matcha|cacao|nesquik|colacao|jam[oó]n|aceite|olio|twinings|lipton|caldo|knorr|cocacola",
 }
 
 STORES = {
@@ -107,7 +107,7 @@ def condiciones(text):
 def categorize(title):
     t = title.lower()
     for name, pattern in CATEGORIES.items():
-        if re.search(pattern, t):
+        if re.search(r"\b(?:%s)" % pattern, t):  # la palabra clave empieza donde empieza una palabra (Temporizador no es rizador)
             return name
     return "Otros"
 
@@ -240,6 +240,7 @@ def main():
     if before is not None:
         anteriores = [d for d in anteriores if d["id"] < before]
     for d in anteriores:
+        d["category"] = categorize(d["title"])  # los guardados también se benefician de las correcciones
         deals.setdefault(d["id"], d)
 
     out = sorted(deals.values(), key=lambda d: d["id"], reverse=True)
